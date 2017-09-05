@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
-	"fmt"
+	"syscall"
 )
 
 func main() {
@@ -32,7 +33,16 @@ func main() {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Start()
+	err = cmd.Run()
+	if err != nil {
+		if e2, ok := err.(*exec.ExitError); ok {
+			if s, ok := e2.Sys().(syscall.WaitStatus); ok {
+				os.Exit(s.ExitStatus())
+			} else {
+				log.Fatal(err)
+			}
+		}
+	}
 	os.Exit(0)
 }
 
